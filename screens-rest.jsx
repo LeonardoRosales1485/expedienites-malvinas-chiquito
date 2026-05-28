@@ -126,17 +126,14 @@ window.ScreenAlta = ScreenAlta;
 
 function PasoTipo({ form, set, toggleOrigen, selectTipoCat }) {
   const isFunc = window.isFuncionario ? window.isFuncionario() : false;
-  const allCatalogo = window.TIPOS_CATALOGO || [];
-  const catalogo = isFunc
-    ? allCatalogo.filter(c => (window.RUBROS_HAB || []).includes(c.rubro))
-    : allCatalogo;
+  const catalogo = window.TIPOS_CATALOGO || [];
   const rubros = React.useMemo(() => {
     const seen = [];
     catalogo.forEach(c => { if (!seen.includes(c.rubro)) seen.push(c.rubro); });
     return seen;
   }, []);
   const [query, setQuery] = useState("");
-  const [rubroFiltro, setRubroFiltro] = useState("todos");
+  const [rubroFiltro, setRubroFiltro] = useState(isFunc ? "Habilitaciones y comercio" : "todos");
   const [modFiltro, setModFiltro] = useState("todas");
 
   const sel = window.getTipoCat ? window.getTipoCat(form.tipoCatId) : null;
