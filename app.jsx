@@ -125,7 +125,7 @@ function App() {
           <span style={{ display: "block", fontSize: 9.5, opacity: .7, letterSpacing: ".08em" }}>MALVINAS ARGENTINAS</span>
           <strong style={{ fontSize: 15, letterSpacing: ".06em" }}>SIDI</strong>
           <span style={{ opacity: .7, fontSize: 10 }}>Sistema de Expediente Digital</span>
-          {window.isFuncionario() && <span className="role-badge" style={{ display: 'block', marginTop: 4 }}>Analista</span>}
+
         </div>
       </div>
 
