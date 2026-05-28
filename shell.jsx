@@ -58,19 +58,25 @@ function Escudo({ size = 30 }) {
 window.Escudo = Escudo;
 
 // ---- SIDEBAR ----
-function Sidebar({ route, setRoute, counts }) {
-  const items = [
+function Sidebar({ route, setRoute, counts, onLogout }) {
+  const sesion = window.SESION || {};
+  const isAdmin = sesion.rol === 'admin';
+  
+  const allItems = [
     { id: "dashboard", label: "Inicio",                 icon: <IconHome />,    group: "Operación" },
     { id: "bandeja",   label: "Mi bandeja",             icon: <IconInbox />,   group: "Operación", badge: counts.bandeja },
-    { id: "mesa",      label: "Mesa de Entrada Virtual",icon: <IconBuilding />,group: "Operación", badge: counts.mesa },
+    { id: "mesa",      label: "Mesa de Entrada Virtual",icon: <IconBuilding />,group: "Operación", badge: counts.mesa, adminOnly: true },
     { id: "listado",   label: "Expedientes",            icon: <IconList />,    group: "Operación" },
     { id: "alta",      label: "Nuevo expediente",       icon: <IconPlus />,    group: "Operación" },
-    { id: "auditoria", label: "Trazabilidad",           icon: <IconHistory />, group: "Control" },
-    { id: "reportes",  label: "Reportes",               icon: <IconChart />,   group: "Control" },
-    { id: "circuitos", label: "Circuitos y workflow",   icon: <IconCog />,     group: "Configuración" },
-    { id: "plantillas",label: "Plantillas",             icon: <IconFile />,    group: "Configuración" },
+    { id: "auditoria", label: "Trazabilidad",           icon: <IconHistory />, group: "Control", adminOnly: true },
+    { id: "reportes",  label: "Reportes",               icon: <IconChart />,   group: "Control", adminOnly: true },
+    { id: "circuitos", label: "Circuitos y workflow",   icon: <IconCog />,     group: "Configuración", adminOnly: true },
+    { id: "plantillas",label: "Plantillas",             icon: <IconFile />,    group: "Configuración", adminOnly: true },
   ];
-  const groups = ["Operación", "Control", "Configuración"];
+  
+  const items = allItems.filter(it => isAdmin || !it.adminOnly);
+  const groups = [...new Set(items.map(i => i.group))];
+  
   return (
     <nav className="side">
       {groups.map(g => (
@@ -93,9 +99,30 @@ function Sidebar({ route, setRoute, counts }) {
 window.Sidebar = Sidebar;
 
 // ---- TOPBAR ----
-function Topbar({ crumbs, onAlerta }) {
+function Topbar({ crumbs, onAlerta, onLogout }) {
   const [openNotif, setOpenNotif] = React.useState(false);
-  const alertas = window.ALERTAS || [];
+  const [searchQuery, setSearchQuery] = React.useState("");
+  const [searchOpen, setSearchOpen] = React.useState(false);
+  const sesion = window.SESION || {};
+  const alertas = (window.getAlertas ? window.getAlertas() : window.ALERTAS) || [];
+  const searchRef = React.useRef(null);
+  
+  const searchResults = searchQuery.length >= 2
+    ? window.EXPEDIENTES.filter(e =>
+        (e.nro + e.titulo + e.objeto + e.iniciador).toLowerCase().includes(searchQuery.toLowerCase())
+      ).slice(0, 8)
+    : [];
+  
+  React.useEffect(() => {
+    const handleClick = (e) => {
+      if (searchRef.current && !searchRef.current.contains(e.target)) setSearchOpen(false);
+    };
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, []);
+  
+  const initials = (sesion.nombre || "?").split(" ").map(w => w[0]).join("").slice(0, 2).toUpperCase();
+  
   return (
     <header className="topbar">
       <div className="breadcrumb">
@@ -106,9 +133,36 @@ function Topbar({ crumbs, onAlerta }) {
           </React.Fragment>
         ))}
       </div>
-      <div className="search">
+      <div className="search" ref={searchRef} style={{ position: "relative" }}>
         <span className="icon"><IconSearch size={15} /></span>
-        <input placeholder="Buscar por número, solicitante, objeto…" />
+        <input
+          placeholder="Buscar por número, solicitante, objeto…"
+          value={searchQuery}
+          onChange={(e) => { setSearchQuery(e.target.value); setSearchOpen(true); }}
+          onFocus={() => searchQuery.length >= 2 && setSearchOpen(true)}
+        />
+        {searchOpen && searchResults.length > 0 && (
+          <>
+            <div className="search-overlay" onClick={() => setSearchOpen(false)} />
+            <div className="search-dropdown">
+              <div className="search-dropdown-head">{searchResults.length} resultado{searchResults.length !== 1 && 's'}</div>
+              {searchResults.map(e => (
+                <button key={e.nro} className="search-result" onClick={() => {
+                  setSearchOpen(false);
+                  setSearchQuery("");
+                  if (window.__go) window.__go("detalle", e.nro);
+                }}>
+                  <NumExp nro={e.nro}/>
+                  <div style={{ flex: 1, marginLeft: 8, textAlign: "left" }}>
+                    <div className="titulo" style={{ fontSize: 12.5 }}>{e.titulo}</div>
+                    <div className="descr" style={{ fontSize: 11 }}>{e.iniciador}</div>
+                  </div>
+                  <ModalidadChip mod={e.modalidad} />
+                </button>
+              ))}
+            </div>
+          </>
+        )}
       </div>
       <div className="notif-wrap" style={{ position: "relative" }}>
         <button
@@ -177,12 +231,17 @@ function Topbar({ crumbs, onAlerta }) {
           </>
         )}
       </div>
-      <div className="user">
-        <div className="avatar">JC</div>
+      <div className="user" style={{ display: "flex", alignItems: "center", gap: 10 }}>
+        <div className="avatar">{initials}</div>
         <div>
-          <div className="name">Julieta Castro</div>
-          <div className="role">Analista — Área Técnica</div>
+          <div className="name">{sesion.nombre || "Sin sesión"}</div>
+          <div className="role">{sesion.cargo || ""}</div>
         </div>
+        {onLogout && (
+          <button className="btn btn-sm btn-ghost" onClick={onLogout} title="Cerrar sesión" style={{ marginLeft: 6 }}>
+            <IconX size={13}/> Salir
+          </button>
+        )}
       </div>
     </header>
   );
@@ -196,6 +255,7 @@ window.getArea   = (id) => window.AREAS.find(a => a.id === id) || {};
 window.getEstado = (id) => window.ESTADOS[id] || { label: id, tono: "neutral" };
 window.getUser   = (id) => window.USUARIOS.find(u => u.id === id) || {};
 window.getExp    = (nro) => window.EXPEDIENTES.find(e => e.nro === nro);
+window.__go = null; // Will be set by App
 
 function EstadoChip({ estado }) {
   const e = window.getEstado(estado);

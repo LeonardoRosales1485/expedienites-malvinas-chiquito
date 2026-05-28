@@ -125,7 +125,11 @@ function ScreenAlta({ go }) {
 window.ScreenAlta = ScreenAlta;
 
 function PasoTipo({ form, set, toggleOrigen, selectTipoCat }) {
-  const catalogo = window.TIPOS_CATALOGO || [];
+  const isFunc = window.isFuncionario ? window.isFuncionario() : false;
+  const allCatalogo = window.TIPOS_CATALOGO || [];
+  const catalogo = isFunc
+    ? allCatalogo.filter(c => (window.RUBROS_HAB || []).includes(c.rubro))
+    : allCatalogo;
   const rubros = React.useMemo(() => {
     const seen = [];
     catalogo.forEach(c => { if (!seen.includes(c.rubro)) seen.push(c.rubro); });
@@ -2487,3 +2491,94 @@ function ModalFirmar({ onClose }) {
   );
 }
 window.ModalFirmar = ModalFirmar;
+
+// =========== MODAL: FORZAR PASE (directo desde detalle) ===========
+function ModalForzarPaseDirecto({ exp, onClose }) {
+  const [motivo, setMotivo] = useState("");
+  const [areaDestino, setAreaDestino] = useState("");
+  const isRestrictivo = exp && exp.modalidad === "restrictiva";
+  const suggested = exp && exp.intervinientes ? exp.intervinientes[Math.min((exp.pasoActual || 0) + 1, exp.intervinientes.length - 1)] : "";
+  
+  if (isRestrictivo) {
+    return (
+      <div className="modal-veil" onClick={onClose}>
+        <div className="modal" onClick={e => e.stopPropagation()}>
+          <div className="modal-head">
+            <h3>Pase forzado no disponible</h3>
+            <button className="x" onClick={onClose}>×</button>
+          </div>
+          <div className="modal-body" style={{ textAlign: "center", padding: 32 }}>
+            <div style={{ fontSize: 36, marginBottom: 12 }}>🔒</div>
+            <div style={{ fontSize: 14, fontWeight: 600, marginBottom: 8 }}>Modalidad Restrictiva</div>
+            <div style={{ fontSize: 13, color: "var(--text-2)" }}>
+              Este expediente opera en modalidad <b>restrictiva</b>. El circuito es cerrado e inexpugnable. No es posible forzar el pase.
+            </div>
+          </div>
+          <div className="modal-foot">
+            <button className="btn btn-primary" onClick={onClose}>Entendido</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  return (
+    <div className="modal-veil" onClick={onClose}>
+      <div className="modal" onClick={e => e.stopPropagation()}>
+        <div className="modal-head">
+          <h3>Forzar pase de expediente</h3>
+          <button className="x" onClick={onClose}>×</button>
+        </div>
+        <div className="modal-body">
+          <div style={{ background: "var(--warn-bg)", border: "1px solid rgba(201,122,31,.3)", borderRadius: 6, padding: "10px 14px", marginBottom: 14, fontSize: 12.5, display: "flex", gap: 10, alignItems: "flex-start" }}>
+            <span style={{ color: "var(--warn)" }}><IconAlert size={14}/></span>
+            <div>
+              <b style={{ color: "var(--warn)" }}>Este pase se desvía del circuito normativo.</b>{" "}
+              <span style={{ color: "var(--text-2)" }}>El motivo quedará registrado en la trazabilidad del expediente.</span>
+            </div>
+          </div>
+          
+          <div className="field">
+            <label>Área destino <span className="req">*</span></label>
+            <select value={areaDestino} onChange={e => setAreaDestino(e.target.value)}>
+              <option value="">Seleccionar área…</option>
+              {(window.AREAS || []).filter(a => a.id !== exp?.areaActual).map(a => (
+                <option key={a.id} value={a.id}>{a.nombre} ({a.abr})</option>
+              ))}
+            </select>
+          </div>
+          
+          <div className="field">
+            <label>Motivo del pase forzado <span className="req">*</span></label>
+            <textarea
+              value={motivo}
+              onChange={e => setMotivo(e.target.value)}
+              placeholder="Explicá por qué corresponde este pase. El motivo quedará registrado en la auditoría."
+              style={{ minHeight: 70 }}
+            />
+          </div>
+          
+          <div style={{ display: "flex", gap: 8, alignItems: "center", fontSize: 11.5, color: "var(--text-2)" }}>
+            <IconShield size={13}/>
+            Esta excepción quedará registrada como <b>pase forzado</b> en la trazabilidad.
+          </div>
+        </div>
+        <div className="modal-foot">
+          <button className="btn" onClick={onClose}>Cancelar</button>
+          <button 
+            className="btn" 
+            style={{ background: "var(--warn)", borderColor: "var(--warn)", color: "#fff" }} 
+            disabled={!motivo.trim() || !areaDestino}
+            onClick={() => {
+              alert("Pase forzado registrado a " + window.getArea(areaDestino).nombre + ".\nMotivo: " + motivo);
+              onClose();
+            }}
+          >
+            <IconAlert size={13}/> Forzar pase
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+window.ModalForzarPaseDirecto = ModalForzarPaseDirecto;

@@ -144,7 +144,7 @@ window.ESTADOS = {
 
 window.USUARIOS = [
   { id: "u1",  nombre: "María Sosa",        cargo: "Jefa Mesa de Entrada Virtual",  area: "mesa", inic: "MS" },
-  { id: "u2",  nombre: "Diego Pérez",       cargo: "Inspector Habilitaciones",      area: "tec",  inic: "DP" },
+  { id: "u2",  nombre: "Diego Pérez",       cargo: "Analista — Habilitaciones",      area: "tec",  inic: "DP" },
   { id: "u3",  nombre: "Lucía Romero",      cargo: "Analista Presupuesto",          area: "ppto", inic: "LR" },
   { id: "u4",  nombre: "Roberto Acuña",     cargo: "Contador Municipal",            area: "cont", inic: "RA" },
   { id: "u5",  nombre: "Silvina Quiroga",   cargo: "Sec. Economía y Hacienda",      area: "hac",  inic: "SQ" },
@@ -152,7 +152,7 @@ window.USUARIOS = [
   { id: "u7",  nombre: "Andrea Vega",       cargo: "Dir. Gral. de Gobierno",        area: "gob",  inic: "AV" },
   { id: "u8",  nombre: "Hernán Vidal",      cargo: "Intendente",                    area: "int",  inic: "HV" },
   { id: "u9",  nombre: "Carla Méndez",      cargo: "Agente Mesa Virtual",            area: "mesa", inic: "CM" },
-  { id: "u10", nombre: "Julieta Castro",    cargo: "Analista Área Técnica",         area: "tec",  inic: "JC" },
+  { id: "u10", nombre: "Julieta Castro",    cargo: "Admin — Área Técnica",         area: "tec",  inic: "JC" },
 ];
 
 // Helper for relative dates
@@ -162,13 +162,74 @@ const d = (offset) => {
   return x.toISOString().slice(0,10);
 };
 
-// Roles — quien puede marcar "Listo para firmar"
-window.SESION = {
-  usuario: "u10",
-  nombre: "Julieta Castro",
-  cargo: "Analista — Área Técnica",
-  esJefeSector: true,  // Si fuera false, los CTAs de "Listo para firmar" estarían deshabilitados
+// Roles — se cargan desde login, se persisten en localStorage
+window.SESION = null;
+
+// Configuración de usuarios para login
+window.USERS_CONFIG = [
+  {
+    id: 'admin', label: 'Administrador', icon: '🔐',
+    usuario: 'u10', nombre: 'Julieta Castro', cargo: 'Admin — Área Técnica',
+    area: 'tec', rol: 'admin', esJefeSector: true, email: 'admin@mma.gov.ar'
+  },
+  {
+    id: 'hab', label: 'Funcionario HAB', icon: '📋',
+    usuario: 'u2', nombre: 'Diego Pérez', cargo: 'Analista — Habilitaciones',
+    area: 'tec', rol: 'funcionario', reparticion: 'HAB', esJefeSector: false,
+    email: 'demo.hab@mma.gov.ar'
+  }
+];
+
+// Rubros donde HAB (Dirección de Habilitaciones) interviene
+window.RUBROS_HAB = [
+  "Habilitaciones y comercio",
+  "Compras y contrataciones",
+  "Convenios urbanísticos",
+  "Espacio público",
+  "Asistencia social",
+];
+
+// Bandeja filtrada para funcionario HAB
+window.BANDEJA_HAB = [
+  { nro:"E-4132-9.000.184-2026", accion:"Inspección técnica — Panadería La Espiga", vence:8, prioridad:"alta" },
+  { nro:"E-4132-9.000.435-2026", accion:"Revisar subsanación — Ferretería El Tornillo", vence:21, prioridad:"media" },
+  { nro:"E-4132-9.000.502-2026", accion:"Verificar cese — Kiosco 24 Hs", vence:28, prioridad:"baja" },
+  { nro:"E-4132-9.000.219-2026", accion:"Especificaciones técnicas — Compra CDR", vence:-2, prioridad:"alta" },
+  { nro:"E-4132-9.000.412-2026", accion:"Verificar documentación técnica — Fumigación", vence:15, prioridad:"alta" },
+  { nro:"E-4132-9.000.541-2026", accion:"Cargar documentación — Subsidio Club Defensores", vence:26, prioridad:"media" },
+  { nro:"E-4132-9.000.547-2026", accion:"Informe de intervención — Denuncia vecinal", vence:29, prioridad:"media" },
+];
+
+// KPIs para funcionario HAB
+window.KPIS_HAB = [
+  { label:"Expedientes activos (HAB)",     valor:10,  delta:"3 restrictivos",   tono:"warn"  },
+  { label:"Pendientes de mi área",         valor:5,   delta:"1 vencido",         tono:"warn"  },
+  { label:"Resueltos este mes",            valor:12,  delta:"+2 vs. abril",      tono:"ok"    },
+  { label:"Tiempo medio en HAB",           valor:"14d",delta:"-1d vs. abril",    tono:"ok"    },
+];
+
+// Notificaciones para funcionario HAB
+window.ALERTAS_HAB = [
+  { tipo:"vencido", texto:"1 expediente vencido en tu bandeja (E-4132-9.000.219)", link:"#bandeja" },
+  { tipo:"firma",   texto:"1 documento pendiente de firma (E-4132-9.000.184)",     link:"#detalle" },
+  { tipo:"obs",     texto:"Subsanación recibida en E-4132-9.000.435",              link:"#detalle" },
+];
+
+// Helpers de roles
+window.getRoleConfig = () => (window.USERS_CONFIG || []).find(u => u.rol === (window.SESION?.rol || 'admin'));
+window.isAdmin = () => window.SESION && window.SESION.rol === 'admin';
+window.isFuncionario = () => window.SESION && window.SESION.rol === 'funcionario';
+window.userCan = (perm) => {
+  const perms = {
+    admin: ['all', 'circuitos', 'plantillas', 'auditoria', 'reportes', 'usuarios', 'mesa', 'forzarPase'],
+    funcionario: ['bandeja', 'detalle', 'listado', 'alta', 'seguimiento', 'forzarPase', 'buscar'],
+  };
+  const role = window.SESION?.rol || 'admin';
+  return (perms[role] || []).includes(perm) || (perms[role] || []).includes('all');
 };
+window.getBandeja = () => window.isFuncionario() ? (window.BANDEJA_HAB || []) : window.BANDEJA;
+window.getKpis = () => window.isFuncionario() ? (window.KPIS_HAB || []) : window.KPIS;
+window.getAlertas = () => window.isFuncionario() ? (window.ALERTAS_HAB || []) : window.ALERTAS;
 
 // Nuevo formato: E-4132-9.XXX.XXX-YYYY  (E = Electrónico · 4132 = código municipal · rango 9M = inequívocamente digital)
 window.EXPEDIENTES = [
@@ -448,14 +509,9 @@ window.EXPEDIENTES = [
     pasoActual: 8,
     documentos: [],
     historial: [
-      { fecha:d(-45), hora:"09:18", area:"mesa", usuario:"u9",  accion:"Solicitud presentada",          detalle:"Familia Romero (5 integrantes, encabezado por Cristina Romero DNI 28.114.502) presenta solicitud de adjudicación de unidad habitacional plan Procrear barrio Pablo Nogués. Acompañan documentación familiar, ingresos y constancia de inscripción al RUPHA." },
-      { fecha:d(-44), hora:"10:42", area:"mesa", usuario:"u9",  accion:"Caratulación",                  detalle:"Mesa de Entrada Virtual asigna número E-4132-9.000.478-2026 al expediente. Tipo: Regularización dominial. Modalidad orientativa. Se deriva a Dirección de Viviendas." },
-      { fecha:d(-42), hora:"15:20", area:"viv",  usuario:"u7",  accion:"Verificación documental",       detalle:"Dirección de Viviendas verifica que la familia cumple con los requisitos de la ordenanza 4129/22: composición familiar, ingresos por debajo del tope, inscripción vigente en RUPHA hace más de 24 meses, sin propiedades a nombre del grupo familiar." },
-      { fecha:d(-30), hora:"14:22", area:"viv",  usuario:"u7",  accion:"Conformidad Dir. Viviendas",    detalle:"Dirección de Viviendas presta conformidad y propone la adjudicación de la unidad habitacional N° 27 del barrio Pablo Nogués. Se eleva a Subsec. Ingresos Tributarios para verificación de deudas." },
-      { fecha:d(-25), hora:"10:08", area:"trib", usuario:"u4",  accion:"Libre deuda emitido",            detalle:"Subsec. Ingresos Tributarios emite libre deuda municipal sobre la unidad habitacional N° 27. Sin observaciones tributarias. Procede." },
-      { fecha:d(-15), hora:"16:42", area:"dict", usuario:"u6",  accion:"Dictamen Legal Nº 142/26",       detalle:"Dictamen jurídico favorable. Se cumplen la totalidad de los recaudos formales y de fondo de la ordenanza 4129/22 para proceder a la adjudicación. Procede al dictado del acto administrativo correspondiente." },
-      { fecha:d(-8),  hora:"12:15", area:"gob",  usuario:"u7",  accion:"Decreto Nº 287/26 confeccionado",detalle:"Dirección General de Gobierno confecciona Decreto Nº 287/26 adjudicando la unidad habitacional N° 27 del barrio Pablo Nogués a la familia Romero. Se eleva para firma del Intendente." },
-      { fecha:d(-2),  hora:"11:00", area:"int",  usuario:"u8",  accion:"Firma del Intendente",            detalle:"El Sr. Intendente Hernán Vidal firma el Decreto Nº 287/26 adjudicando la unidad habitacional a la familia Romero. Se procede a notificar a la familia adjudicataria y al Registro de Bienes Municipales." },
+      { fecha:d(-45), hora:"09:18", area:"mesa", usuario:"u9",  accion:"Solicitud presentada",          detalle:"Familia Romero presenta solicitud de adjudicación." },
+      { fecha:d(-44), hora:"10:42", area:"mesa", usuario:"u9",  accion:"Caratulación",                  detalle:"Mesa de Entrada Virtual asigna número E-4132-9.000.478-2026 al expediente." },
+      { fecha:d(-2),  hora:"11:00", area:"int",  usuario:"u8",  accion:"Firma del Intendente",            detalle:"El Sr. Intendente Hernán Vidal firma el Decreto Nº 287/26 adjudicando la unidad habitacional a la familia Romero." },
     ],
     hojaFirmas: {
       numero: "HF-4132-9.000.478-2026",
@@ -468,7 +524,7 @@ window.EXPEDIENTES = [
         { area:"viv",  cargo:"Director de Viviendas",           orden:1 },
         { area:"trib", cargo:"Subsec. Ingresos Tributarios",    orden:2 },
         { area:"dict", cargo:"Dictaminante Legal",              orden:3 },
-        { area:"gob",  cargo:"Dir. Gral. de Gobierno",          orden:4 },
+        { area:"gob",  cargo:"Dir. Gral. de Gobierno",         orden:4 },
         { area:"int",  cargo:"Intendente Municipal",            orden:5 },
       ],
       firmas: [
@@ -503,16 +559,8 @@ window.EXPEDIENTES = [
     ],
     documentos: [],
     historial: [
-      { fecha:d(-58), hora:"08:30", area:"obras",usuario:"u7",  accion:"Solicitud Sec. Obras Públicas", detalle:"Secretaría de Obras Públicas inicia el expediente para la repavimentación de 4 cuadras de calle Posadas (entre Belgrano y San Martín) en Grand Bourg. Plazo de obra estimado: 90 días. Monto estimado: $ 28.450.000." },
-      { fecha:d(-55), hora:"11:14", area:"tec",  usuario:"u10", accion:"Pliego técnico revisado",        detalle:"Área Técnica revisa el pliego de bases y condiciones particulares. Especificaciones técnicas para mezcla asfáltica en caliente IRAM 113.045. Cómputo y presupuesto preliminar. Cronograma físico-financiero. Sin observaciones." },
-      { fecha:d(-50), hora:"09:30", area:"obras",usuario:"u7",  accion:"Conformidad Sec. Obras",         detalle:"Sec. Obras Públicas presta conformidad al pliego y eleva a Presupuesto para verificación de fondos." },
-      { fecha:d(-42), hora:"14:08", area:"ppto", usuario:"u3",  accion:"Factibilidad presupuestaria",   detalle:"Dirección de Presupuesto verifica disponibilidad en la partida 6.2.1.3 (Obras menores de pavimentación). Saldo: $ 142.300.000. Se compromete preventivamente el monto solicitado." },
-      { fecha:d(-38), hora:"10:21", area:"cont", usuario:"u4",  accion:"Imputación contable",            detalle:"Contaduría Municipal imputa el gasto a la partida 6.2.1.3 jurisdicción 1.1.1.20 (Sec. Obras Públicas). Numeración interna CM-2026-2848. Registro contable efectuado." },
-      { fecha:d(-35), hora:"16:15", area:"hac",  usuario:"u5",  accion:"Conformidad económica",           detalle:"Secretaría de Economía y Hacienda presta conformidad económica al gasto. Procede al Dictamen Legal." },
-      { fecha:d(-30), hora:"15:40", area:"dict", usuario:"u6",  accion:"Dictamen Legal Nº 089/26",        detalle:"Dictamen jurídico favorable. Procede el llamado a licitación pública según ordenanza 4032/19 y Decreto Reglamentario 1845/19. Procédase a la confección del acto administrativo." },
-      { fecha:d(-22), hora:"11:33", area:"gob",  usuario:"u7",  accion:"Decreto Nº 412/26 confeccionado",detalle:"Dirección General de Gobierno confecciona Decreto Nº 412/26 autorizando el llamado a licitación pública para la repavimentación de calle Posadas. Eleva para firma del Intendente." },
-      { fecha:d(-12), hora:"09:45", area:"int",  usuario:"u8",  accion:"Firma del Intendente",             detalle:"El Sr. Intendente Hernán Vidal firma el Decreto Nº 412/26. Se autoriza el llamado a licitación y la afectación presupuestaria correspondiente. Pasa a etapa de ejecución." },
-      { fecha:d(-5),  hora:"10:00", area:"obras",usuario:"u7",  accion:"Inicio de obra",                  detalle:"Adjudicada la obra a la empresa Vialur S.A. tras proceso licitatorio (no anexado a este expediente). Se firma el acta de inicio de obra. Inspector de obra designado: Diego Pérez." },
+      { fecha:d(-58), hora:"08:30", area:"obras",usuario:"u7",  accion:"Solicitud Sec. Obras Públicas", detalle:"Secretaría de Obras Públicas inicia el expediente para la repavimentación de 4 cuadras de calle Posadas." },
+      { fecha:d(-5),  hora:"10:00", area:"obras",usuario:"u7",  accion:"Inicio de obra",                  detalle:"Adjudicada la obra a la empresa Vialur S.A. Se firma el acta de inicio de obra. Inspector de obra designado: Diego Pérez." },
     ],
     hojaFirmas: {
       numero: "HF-4132-9.000.489-2026",
@@ -584,7 +632,6 @@ window.EXPEDIENTES = [
     documentos: [],
     historial: [],
   },
-  // CIRCUITO 53 — caso atípico vecinal
   {
     nro: "E-4132-9.000.547-2026",
     titulo: "Denuncia vecinal — Mordedura de perro en plaza pública",
@@ -606,7 +653,6 @@ window.EXPEDIENTES = [
     documentos: [],
     historial: [],
   },
-  // HCD — Concejo Deliberante (autónomo, color verde)
   {
     nro: "HCD-4132-O.000.089-2026",
     titulo: "Ordenanza — Adhesión al programa provincial \"Barrios Limpios\"",
@@ -628,7 +674,6 @@ window.EXPEDIENTES = [
     documentos: [],
     historial: [],
   },
-  // BORRADOR EN CARGA COLABORATIVA — ilustra el guardado de progreso multi-área
   {
     nro: "E-4132-9.000.541-2026",
     titulo: "Subsidio extraordinario — Club Atlético Defensores Tortuguitas",
@@ -663,6 +708,20 @@ window.EXPEDIENTES = [
     ],
   },
 ];
+
+// Mapeo de rubros a bases de TIPOS para el wizard de alta
+window.RUBRO_BASE_MAP = {
+  "Habilitaciones y comercio": "hab",
+  "Compras y contrataciones": "comp",
+  "Subsidios": "subs",
+  "Convenios urbanísticos": "conv",
+  "Espacio público": "obra",
+  "Asistencia social": "subs",
+  "Tránsito y seguridad vial": "obra",
+  "Telecomunicaciones": "obra",
+  "Vehículos en depósito": "gen",
+  "Reclamos": "gen",
+};
 
 // Bandeja del usuario actual (u10, Área Técnica)
 window.BANDEJA = [

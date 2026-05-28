@@ -2262,6 +2262,210 @@ body.highlight-forced .chip.warn { box-shadow: 0 0 0 2px rgba(201,122,31,.15); }
   .pdf-thumb-page .pdf-page { transform: scale(0.152); }
 }
 
+/* ===== MULTI-ROLE: Login Screen ===== */
+.login-screen {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e4e9f0 100%);
+  font-family: var(--font);
+}
+.login-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 36px 32px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 4px 24px rgba(0,0,0,.06);
+}
+.login-brand {
+  text-align: center;
+  margin-bottom: 24px;
+}
+.login-brand .escudo {
+  margin: 0 auto 12px;
+}
+.login-brand h1 {
+  font-size: 22px;
+  letter-spacing: .08em;
+  margin: 0;
+  color: var(--navy);
+}
+.login-subtitle {
+  font-size: 13px;
+  color: var(--text-2);
+  margin-top: 4px;
+}
+.login-muni {
+  font-size: 11px;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin-top: 4px;
+}
+.login-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 11px;
+  color: var(--text-3);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin: 20px 0 16px;
+}
+.login-divider::before,
+.login-divider::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--border);
+}
+.login-users {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.login-user-btn {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 14px 16px;
+  background: var(--surface);
+  border: 1.5px solid var(--border);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all .15s;
+  text-align: left;
+  font-family: var(--font);
+}
+.login-user-btn:hover {
+  border-color: var(--celeste);
+  background: var(--celeste-50);
+  box-shadow: 0 2px 8px rgba(0,0,0,.04);
+}
+.login-user-icon {
+  font-size: 24px;
+  width: 40px;
+  height: 40px;
+  display: grid;
+  place-items: center;
+  background: var(--celeste-50);
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+.login-user-info {
+  flex: 1;
+}
+.login-user-name {
+  font-weight: 600;
+  font-size: 13.5px;
+  color: var(--text);
+}
+.login-user-role {
+  font-size: 12px;
+  color: var(--text-2);
+  margin-top: 1px;
+}
+.login-user-email {
+  font-size: 11px;
+  color: var(--text-3);
+  margin-top: 1px;
+}
+.login-footer {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-3);
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+/* Role badge in brand */
+.role-badge {
+  display: inline-block;
+  font-size: 9px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  background: #E8F5EF;
+  color: #1A3D33;
+  border: 1px solid #C8E6D9;
+  border-radius: 4px;
+  padding: 2px 8px;
+  margin-top: 2px;
+}
+
+/* ===== Search Dropdown ===== */
+.search-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 55;
+}
+.search-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  min-width: 380px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,.12);
+  z-index: 100;
+  margin-top: 4px;
+  overflow: hidden;
+}
+.search-dropdown-head {
+  padding: 8px 14px;
+  font-size: 11px;
+  color: var(--text-3);
+  border-bottom: 1px solid var(--border);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+.search-result {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  width: 100%;
+  padding: 10px 14px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  font-family: var(--font);
+  transition: background .1s;
+}
+.search-result:hover {
+  background: var(--celeste-50);
+}
+.search-result .titulo {
+  font-size: 12.5px;
+  font-weight: 500;
+}
+.search-result .descr {
+  font-size: 11px;
+  color: var(--text-3);
+}
+
+/* ===== Restrictivo badge in tables ===== */
+.restrictivo-badge {
+  margin-left: 4px;
+  font-size: 11px;
+  vertical-align: middle;
+}
+.row-restrictivo {
+  border-left: 3px solid #dc2626 !important;
+}
+
+/* ===== Funcionario Banner ===== */
+.banner-role {
+  transition: all .2s;
+}
+
 
 
 

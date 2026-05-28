@@ -2,44 +2,69 @@
 
 // ============ DASHBOARD ============
 function ScreenDashboard({ go }) {
+  const sesion = window.SESION || {};
+  const isFunc = window.isFuncionario ? window.isFuncionario() : false;
+  const kpis = (window.getKpis ? window.getKpis() : window.KPIS) || window.KPIS;
+  const bandeja = (window.getBandeja ? window.getBandeja() : window.BANDEJA) || window.BANDEJA;
+  const firstName = (sesion.nombre || "Usuario").split(" ")[0];
+  
   return (
     <>
       <div className="page-head">
         <div>
-          <h1>Buen día, Julieta</h1>
-          <div className="sub">Resumen operativo · martes 27 de mayo de 2026</div>
+          <h1>Buen día, {firstName}</h1>
+          <div className="sub">
+            {isFunc 
+              ? "Panel de gestión · Dirección de Habilitaciones Comerciales"
+              : "Resumen operativo · martes 27 de mayo de 2026"}
+          </div>
         </div>
         <div className="actions">
           <button className="btn btn-primary" onClick={() => go("alta")}><IconPlus size={15}/> Nuevo expediente</button>
         </div>
       </div>
 
-      {/* Arquitectura trimodal */}
-      <div className="card banner-arch" style={{ marginBottom: 14, background: "linear-gradient(90deg, var(--celeste-50) 0%, var(--surface) 60%)" }}>
-        <div className="card-body" style={{ display: "flex", alignItems: "center", gap: 18 }}>
-          <div>
-            <div style={{ fontSize: 11, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: ".06em" }}>Arquitectura del sistema</div>
-            <div style={{ fontWeight: 600, fontSize: 14, marginTop: 2 }}>Motor de workflow trimodal configurable</div>
-            <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 4, maxWidth: 600 }}>
-              Cada circuito puede operar en una de tres modalidades. El administrador decide qué nivel de rigidez aplica a cada trámite.
+      {isFunc && (
+        <div className="card banner-role" style={{ marginBottom: 14, background: "linear-gradient(90deg, #E8F5EF 0%, var(--surface) 60%)", border: "1px solid #C8E6D9" }}>
+          <div className="card-body" style={{ display: "flex", alignItems: "center", gap: 12 }}>
+            <span style={{ fontSize: 22 }}>📋</span>
+            <div>
+              <div style={{ fontWeight: 600, fontSize: 13.5, color: "#1A3D33" }}>Perfil Funcionario — Dirección de Habilitaciones</div>
+              <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 2 }}>
+                Solo ves expedientes donde HAB participa. Podés intervenir, firmar y derivar pasos de tu área.
+              </div>
             </div>
           </div>
-          <div style={{ marginLeft: "auto", display: "flex", gap: 14 }}>
-            {["libre", "orientativa", "restrictiva"].map(m => (
-              <div key={m} style={{ textAlign: "center" }}>
-                <ModalidadChip mod={m}/>
-                <div style={{ fontSize: 11, color: "var(--text-2)", marginTop: 6 }}>
-                  {m === "libre" ? "32 circuitos" : m === "orientativa" ? "4 circuitos" : "2 circuitos"}
-                </div>
+        </div>
+      )}
+
+      {!isFunc && (
+        <div className="card banner-arch" style={{ marginBottom: 14, background: "linear-gradient(90deg, var(--celeste-50) 0%, var(--surface) 60%)" }}>
+          <div className="card-body" style={{ display: "flex", alignItems: "center", gap: 18 }}>
+            <div>
+              <div style={{ fontSize: 11, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: ".06em" }}>Arquitectura del sistema</div>
+              <div style={{ fontWeight: 600, fontSize: 14, marginTop: 2 }}>Motor de workflow trimodal configurable</div>
+              <div style={{ fontSize: 12.5, color: "var(--text-2)", marginTop: 4, maxWidth: 600 }}>
+                Cada circuito puede operar en una de tres modalidades. El administrador decide qué nivel de rigidez aplica a cada trámite.
               </div>
-            ))}
+            </div>
+            <div style={{ marginLeft: "auto", display: "flex", gap: 14 }}>
+              {["libre", "orientativa", "restrictiva"].map(m => (
+                <div key={m} style={{ textAlign: "center" }}>
+                  <ModalidadChip mod={m}/>
+                  <div style={{ fontSize: 11, color: "var(--text-2)", marginTop: 6 }}>
+                    {m === "libre" ? "32 circuitos" : m === "orientativa" ? "4 circuitos" : "2 circuitos"}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* KPIs */}
       <div style={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: 14, marginBottom: 18 }}>
-        {window.KPIS.map((k, i) => (
+        {kpis.map((k, i) => (
           <div key={i} className="kpi">
             <div className="lbl">{k.label}</div>
             <div className="val">{k.valor}</div>
@@ -48,19 +73,18 @@ function ScreenDashboard({ go }) {
         ))}
       </div>
 
-      <div style={{ display: "grid", gridTemplateColumns: "1.5fr 1fr", gap: 14 }}>
+      <div style={{ display: "grid", gridTemplateColumns: isFunc ? "1fr" : "1.5fr 1fr", gap: 14 }}>
         {/* Bandeja preview */}
         <div className="card">
           <div className="card-head">
             <h3>Mi bandeja de tareas</h3>
-            <span className="chip warn"><span className="chip-dot"/>2 vencidos</span>
-            <span className="meta">5 pendientes</span>
+            <span className="meta">{bandeja.length} pendientes</span>
             <button className="btn btn-sm btn-ghost" onClick={() => go("bandeja")}>Ver todos <IconChevR size={13}/></button>
           </div>
           <table className="tbl">
-            <thead><tr><th style={{width: 140}}>Expediente</th><th>Acción requerida</th><th style={{width: 110}}>Vence</th></tr></thead>
+            <thead><tr><th style={{width: 140}}>Expediente</th><th>Acción requerida</th>{isFunc && <th style={{width: 100}}>Modalidad</th>}<th style={{width: 110}}>Vence</th></tr></thead>
             <tbody>
-              {window.BANDEJA.slice(0, 5).map(b => {
+              {bandeja.slice(0, 5).map(b => {
                 const e = window.getExp(b.nro);
                 return (
                   <tr key={b.nro} onClick={() => go("detalle", b.nro)}>
@@ -69,6 +93,7 @@ function ScreenDashboard({ go }) {
                       <div className="titulo">{b.accion}</div>
                       <div className="descr">{e?.titulo}</div>
                     </td>
+                    {isFunc && <td>{e && <ModalidadChip mod={e.modalidad} />}</td>}
                     <td><VenceChip dias={b.vence} /></td>
                   </tr>
                 );
@@ -77,69 +102,72 @@ function ScreenDashboard({ go }) {
           </table>
         </div>
 
-        {/* Alertas + atajos */}
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <div className="card">
-            <div className="card-head"><h3>Alertas</h3></div>
-            <div className="card-body" style={{ padding: 0 }}>
-              {[
-                { ic: <IconAlert size={16}/>, color: "var(--err)",  txt: "2 expedientes vencidos en tu bandeja",        sub: "E-4132-9.000.489 · E-4132-9.000.518" },
-                { ic: <IconSign size={16}/>, color: "var(--warn)", txt: "1 acto pendiente de firma de Intendencia",     sub: "E-4132-9.000.219 — Compra menor CDR" },
-                { ic: <IconCheck size={16}/>,color: "var(--ok)",   txt: "4 borradores en Mesa de Entrada Virtual",       sub: "Esperando caratulación oficial" },
-              ].map((a, i) => (
-                <div key={i} style={{ display: "flex", gap: 12, padding: "12px 18px", borderBottom: i < 2 ? "1px solid var(--border)" : "none", alignItems: "flex-start" }}>
-                  <div style={{ color: a.color, marginTop: 2 }}>{a.ic}</div>
-                  <div style={{ flex: 1, fontSize: 13 }}>
-                    <div style={{ fontWeight: 500 }}>{a.txt}</div>
-                    <div style={{ color: "var(--text-2)", fontSize: 11.5, marginTop: 2 }}>{a.sub}</div>
+        {!isFunc && (
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <div className="card">
+              <div className="card-head"><h3>Alertas</h3></div>
+              <div className="card-body" style={{ padding: 0 }}>
+                {[
+                  { ic: <IconAlert size={16}/>, color: "var(--err)",  txt: "2 expedientes vencidos en tu bandeja",        sub: "E-4132-9.000.489 · E-4132-9.000.518" },
+                  { ic: <IconSign size={16}/>, color: "var(--warn)", txt: "1 acto pendiente de firma de Intendencia",     sub: "E-4132-9.000.219 — Compra menor CDR" },
+                  { ic: <IconCheck size={16}/>,color: "var(--ok)",   txt: "4 borradores en Mesa de Entrada Virtual",       sub: "Esperando caratulación oficial" },
+                ].map((a, i) => (
+                  <div key={i} style={{ display: "flex", gap: 12, padding: "12px 18px", borderBottom: i < 2 ? "1px solid var(--border)" : "none", alignItems: "flex-start" }}>
+                    <div style={{ color: a.color, marginTop: 2 }}>{a.ic}</div>
+                    <div style={{ flex: 1, fontSize: 13 }}>
+                      <div style={{ fontWeight: 500 }}>{a.txt}</div>
+                      <div style={{ color: "var(--text-2)", fontSize: 11.5, marginTop: 2 }}>{a.sub}</div>
+                    </div>
                   </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="card">
+              <div className="card-head"><h3>Distribución por tipo</h3></div>
+              <div className="card-body">
+                {window.TIPOS.slice(0, 5).map((t, i) => {
+                  const vals = [38, 27, 19, 14, 11];
+                  return (
+                    <div className="bar-row" key={t.id}>
+                      <div className="lbl">{t.rubro}</div>
+                      <div className="track"><div className="fill" style={{ width: (vals[i] * 2) + "%", background: t.color }} /></div>
+                      <div className="num">{vals[i]}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Actividad reciente — solo admin */}
+      {!isFunc && (
+        <div className="card" style={{ marginTop: 14 }}>
+          <div className="card-head">
+            <h3>Actividad reciente del municipio</h3>
+            <span className="meta">Últimas 24 hs · 18 movimientos</span>
+          </div>
+          <div className="card-body">
+            <div className="timeline">
+              {[
+                { who: "u9", txt: <>Caratuló <b>E-4132-9.000.502</b> — Baja de comercio "24 Hs"</>,    ago: "Hace 35 min", area: "mesa" },
+                { who: "u4", txt: <>Imputó orden de pago en <b>E-4132-9.000.489</b> — Repavimentación calle Posadas</>, ago: "Hace 2 hs", area: "cont" },
+                { who: "u6", txt: <>Emitió dictamen legal favorable en <b>E-4132-9.000.388</b> — Convenio UNGS</>, ago: "Hace 3 hs", area: "leg" },
+                { who: "u2", txt: <>Cargó informe técnico de inspección en <b>E-4132-9.000.184</b> — Habilitación Panadería</>, ago: "Hace 5 hs", area: "tec" },
+                { who: "u7", txt: <>Generó proyecto de decreto para <b>E-4132-9.000.478</b> — Adjudicación Procrear</>, ago: "Hace 7 hs", area: "gob" },
+              ].map((ev, i) => (
+                <div className="ev" key={i}>
+                  <div className="when">{ev.ago}</div>
+                  <div className="what">{ev.txt}</div>
+                  <div className="by"><Avatar uid={ev.who}/> <span>{window.getUser(ev.who).nombre} · {window.getArea(ev.area).nombre}</span></div>
                 </div>
               ))}
             </div>
           </div>
-
-          <div className="card">
-            <div className="card-head"><h3>Distribución por tipo</h3></div>
-            <div className="card-body">
-              {window.TIPOS.slice(0, 5).map((t, i) => {
-                const vals = [38, 27, 19, 14, 11];
-                return (
-                  <div className="bar-row" key={t.id}>
-                    <div className="lbl">{t.rubro}</div>
-                    <div className="track"><div className="fill" style={{ width: (vals[i] * 2) + "%", background: t.color }} /></div>
-                    <div className="num">{vals[i]}</div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
         </div>
-      </div>
-
-      {/* Actividad reciente */}
-      <div className="card" style={{ marginTop: 14 }}>
-        <div className="card-head">
-          <h3>Actividad reciente del municipio</h3>
-          <span className="meta">Últimas 24 hs · 18 movimientos</span>
-        </div>
-        <div className="card-body">
-          <div className="timeline">
-            {[
-              { who: "u9", txt: <>Caratuló <b>E-4132-9.000.502</b> — Baja de comercio "24 Hs"</>,    ago: "Hace 35 min", area: "mesa" },
-              { who: "u4", txt: <>Imputó orden de pago en <b>E-4132-9.000.489</b> — Repavimentación calle Posadas</>, ago: "Hace 2 hs", area: "cont" },
-              { who: "u6", txt: <>Emitió dictamen legal favorable en <b>E-4132-9.000.388</b> — Convenio UNGS</>, ago: "Hace 3 hs", area: "leg" },
-              { who: "u2", txt: <>Cargó informe técnico de inspección en <b>E-4132-9.000.184</b> — Habilitación Panadería</>, ago: "Hace 5 hs", area: "tec" },
-              { who: "u7", txt: <>Generó proyecto de decreto para <b>E-4132-9.000.478</b> — Adjudicación Procrear</>, ago: "Hace 7 hs", area: "gob" },
-            ].map((ev, i) => (
-              <div className="ev" key={i}>
-                <div className="when">{ev.ago}</div>
-                <div className="what">{ev.txt}</div>
-                <div className="by"><Avatar uid={ev.who}/> <span>{window.getUser(ev.who).nombre} · {window.getArea(ev.area).nombre}</span></div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
+      )}
     </>
   );
 }
@@ -148,22 +176,29 @@ window.ScreenDashboard = ScreenDashboard;
 // ============ BANDEJA ============
 function ScreenBandeja({ go }) {
   const [tab, setTab] = useState("pend");
+  const isFunc = window.isFuncionario ? window.isFuncionario() : false;
+  const bandeja = (window.getBandeja ? window.getBandeja() : window.BANDEJA) || window.BANDEJA;
+  
   const tabs = [
-    { id: "pend",  label: "Pendientes",       n: 5 },
-    { id: "venc",  label: "Vencidos",          n: 2 },
-    { id: "obs",   label: "Observados",        n: 1 },
-    { id: "firma", label: "Pendientes de firma", n: 0 },
-    { id: "todos", label: "Todos",             n: 12 },
+    { id: "pend",  label: "Pendientes",       n: bandeja.length },
+    { id: "venc",  label: "Vencidos",          n: bandeja.filter(b => b.vence < 0).length },
+    { id: "todos", label: "Todos",             n: bandeja.length },
   ];
+  
+  const filtered = tab === "venc" ? bandeja.filter(b => b.vence < 0) : bandeja;
+  
   return (
     <>
       <div className="page-head">
         <div>
           <h1>Mi bandeja de tareas</h1>
-          <div className="sub">Expedientes que requieren tu intervención en el Área Técnica</div>
+          <div className="sub">
+            {isFunc
+              ? "Expedientes donde HAB participa y requieren tu intervención"
+              : "Expedientes que requieren tu intervención en el Área Técnica"}
+          </div>
         </div>
         <div className="actions">
-          <button className="btn"><IconUsers size={15}/> Reasignar</button>
           <button className="btn"><IconDownload size={15}/> Exportar</button>
         </div>
       </div>
@@ -183,12 +218,6 @@ function ScreenBandeja({ go }) {
             <span className="fchip">Alta</span>
             <span className="fchip">Media</span>
             <span className="fchip">Baja</span>
-            <span style={{ width: 14 }}/>
-            <select defaultValue="recent">
-              <option value="recent">Más recientes primero</option>
-              <option value="vence">Por vencimiento</option>
-              <option value="prio">Por prioridad</option>
-            </select>
           </div>
         </div>
         <table className="tbl">
@@ -198,23 +227,29 @@ function ScreenBandeja({ go }) {
               <th style={{ width: 200 }}>Expediente</th>
               <th>Tarea / objeto</th>
               <th style={{ width: 130 }}>Tipo</th>
+              {isFunc && <th style={{ width: 110 }}>Modalidad</th>}
               <th style={{ width: 170 }}>Estado</th>
               <th style={{ width: 110 }}>Vence</th>
               <th style={{ width: 90 }}>Prioridad</th>
             </tr>
           </thead>
           <tbody>
-            {window.BANDEJA.map(b => {
+            {filtered.map(b => {
               const e = window.getExp(b.nro);
+              const isRestrictivo = e && e.modalidad === "restrictiva";
               return (
-                <tr key={b.nro} onClick={() => go("detalle", b.nro)}>
+                <tr key={b.nro} onClick={() => go("detalle", b.nro)} className={isRestrictivo ? "row-restrictivo" : ""}>
                   <td onClick={(ev) => ev.stopPropagation()}><input type="checkbox" /></td>
-                  <td><NumExp nro={b.nro}/></td>
+                  <td>
+                    <NumExp nro={b.nro}/>
+                    {isFunc && isRestrictivo && <span className="restrictivo-badge" title="Modalidad restrictiva — pase forzado no disponible">🔒</span>}
+                  </td>
                   <td>
                     <div className="titulo">{b.accion}</div>
                     <div className="descr">{e?.titulo}</div>
                   </td>
                   <td>{e && <TipoChip tipo={e.tipo} />}</td>
+                  {isFunc && <td>{e && <ModalidadChip mod={e.modalidad} />}</td>}
                   <td>{e && <EstadoChip estado={e.estado} />}</td>
                   <td><VenceChip dias={b.vence} /></td>
                   <td>
@@ -238,11 +273,14 @@ function ScreenListado({ go }) {
   const [filtroTipo, setFiltroTipo]   = useState("todos");
   const [filtroEstado, setFiltroEstado] = useState("todos");
   const [busqueda, setBusqueda] = useState("");
-
+  const isFunc = window.isFuncionario ? window.isFuncionario() : false;
+  
   const filtrados = window.EXPEDIENTES.filter(e => {
     if (filtroTipo !== "todos" && e.tipo !== filtroTipo) return false;
     if (filtroEstado === "vencidos" && !e.vencido) return false;
     if (busqueda && !(e.titulo + e.nro + e.objeto).toLowerCase().includes(busqueda.toLowerCase())) return false;
+    // For funcionario: only show expedientes where HAB participates
+    if (isFunc && e.intervinientes && !e.intervinientes.includes("tec")) return false;
     return true;
   });
 
@@ -251,7 +289,7 @@ function ScreenListado({ go }) {
       <div className="page-head">
         <div>
           <h1>Expedientes</h1>
-          <div className="sub">{window.EXPEDIENTES.length} expedientes registrados en el municipio</div>
+          <div className="sub">{filtrados.length} expedientes {isFunc ? 'donde HAB participa' : 'registrados en el municipio'}</div>
         </div>
         <div className="actions">
           <button className="btn"><IconDownload size={15}/> Exportar</button>
@@ -278,9 +316,8 @@ function ScreenListado({ go }) {
             <option value="todos">Cualquier estado</option>
             <option value="vencidos">Solo vencidos</option>
           </select>
-          <button className="btn btn-sm">Más filtros</button>
           <div style={{ marginLeft: "auto", fontSize: 12, color: "var(--text-2)" }}>
-            Mostrando <b>{filtrados.length}</b> de {window.EXPEDIENTES.length}
+            Mostrando <b>{filtrados.length}</b> de {isFunc ? filtrados.length : window.EXPEDIENTES.length}
           </div>
         </div>
       </div>
@@ -301,10 +338,12 @@ function ScreenListado({ go }) {
           <tbody>
             {filtrados.map(e => {
               const venceDias = Math.ceil((new Date(e.plazoLimite) - new Date("2026-05-27")) / 86400000);
+              const isRestrictivo = e.modalidad === "restrictiva";
               return (
                 <tr key={e.nro} onClick={() => go("detalle", e.nro)} className={e.autonomo ? "hcd-stripe" : ""}>
                   <td>
                     <NumExp nro={e.nro}/>
+                    {isFunc && isRestrictivo && <span className="restrictivo-badge" title="Restrictivo">🔒</span>}
                     <div style={{ fontSize: 11, color: "var(--text-3)", marginTop: 3, display: "flex", gap: 6, alignItems: "center", flexWrap: "wrap" }}>
                       <span>{e.fechaInicio}</span>
                       {e.autonomo && <span className="hcd-badge">HCD</span>}
@@ -314,9 +353,7 @@ function ScreenListado({ go }) {
                   </td>
                   <td>
                     <div className="titulo" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: 280 }}>{e.titulo}</div>
-                    <div className="descr" style={{
-                      whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 280
-                    }}>{e.objeto}</div>
+                    <div className="descr" style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", maxWidth: 280 }}>{e.objeto}</div>
                   </td>
                   <td><TipoChip tipo={e.tipo} /></td>
                   <td><ModalidadChip mod={e.modalidad} /></td>

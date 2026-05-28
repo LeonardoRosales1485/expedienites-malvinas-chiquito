@@ -29,6 +29,16 @@ function ScreenDetalle({ nro, go, openModal }) {
           <button className="btn" title="Guarda el avance actual. El expediente sigue abierto para que otras áreas intervengan."><IconUpload size={14}/> Guardar progreso</button>
           <button className="btn" onClick={() => openModal("derivar")}><IconUsers size={14}/> Derivar</button>
           <button className="btn btn-primary" onClick={() => openModal("firmar")}><IconSign size={14}/> Intervenir / firmar</button>
+          {exp.modalidad !== 'restrictiva' && (
+            <button className="btn" style={{ background: "var(--warn)", borderColor: "var(--warn)", color: "#fff" }} onClick={() => openModal("forzarPase")} title="Forzar pase a siguiente área">
+              <IconAlert size={14}/> Forzar pase
+            </button>
+          )}
+          {exp.modalidad === 'restrictiva' && (
+            <span className="chip" style={{ background: "#fee2e2", color: "#991b1b", borderColor: "#fecaca", fontSize: 11, padding: "4px 10px" }} title="No disponible para modalidad restrictiva">
+              🔒 Restringido
+            </span>
+          )}
         </div>
       </div>
 
@@ -43,7 +53,7 @@ function ScreenDetalle({ nro, go, openModal }) {
             { k: "Fecha de inicio", v: exp.fechaInicio,                                     sub: "Caratulación" },
             { k: "Plazo límite",    v: exp.plazoLimite,                                     sub: <VenceChip dias={venceDias}/> },
             { k: "Área actual",     v: window.getArea(exp.areaActual).nombre,               sub: window.getArea(exp.areaActual).abr },
-            { k: "Responsable",     v: "Diego Pérez",                                       sub: "Inspector" },
+            { k: "Responsable",     v: "Diego Pérez",                                       sub: "Analista" },
             { k: "Intervinientes",  v: <div style={{ display: "flex", gap: -4 }}>
                 {exp.intervinientes.slice(0, 5).map((aid, i) => (
                   <span key={aid} title={window.getArea(aid).nombre}
@@ -72,6 +82,7 @@ function ScreenDetalle({ nro, go, openModal }) {
           { id: "docs",     label: `Documentos · ${exp.documentos.length}` },
           { id: "flujo",    label: "Circuito" },
           { id: "hist",     label: "Historial" },
+          { id: "seguimiento", label: "Seguimiento" },
           { id: "datos",    label: "Datos del trámite" },
           ...(exp.subExpedientes?.length ? [{ id: "sub", label: `Sub-expedientes · ${exp.subExpedientes.length}` }] : []),
           { id: "notif",    label: "Notificaciones" },
@@ -80,12 +91,13 @@ function ScreenDetalle({ nro, go, openModal }) {
         ))}
       </div>
 
-      {tab === "flujo"  && <TabFlujo exp={exp} openModal={openModal} />}
-      {tab === "docs"   && <TabDocs exp={exp} openModal={openModal} />}
-      {tab === "hist"   && <TabHistorial exp={exp} />}
-      {tab === "datos"  && <TabDatos exp={exp} />}
-      {tab === "sub"    && <TabSub exp={exp} />}
-      {tab === "notif"  && <TabNotif exp={exp} />}
+      {tab === "flujo"        && <TabFlujo exp={exp} openModal={openModal} />}
+      {tab === "docs"         && <TabDocs exp={exp} openModal={openModal} />}
+      {tab === "hist"         && <TabHistorial exp={exp} />}
+      {tab === "seguimiento"  && <TabSeguimiento exp={exp} />}
+      {tab === "datos"        && <TabDatos exp={exp} />}
+      {tab === "sub"          && <TabSub exp={exp} />}
+      {tab === "notif"        && <TabNotif exp={exp} />}
     </>
   );
 }
@@ -209,6 +221,137 @@ function circuitoSimple(exp) {
     plazo: ["2d", "3d", "3d", "2d", "3d", "2d", "3d", "2d", "3d"][i] || "3d",
     estado: "pendiente",
   }));
+}
+
+// ---------- TAB: SEGUIMIENTO ----------
+function TabSeguimiento({ exp }) {
+  const isFunc = window.isFuncionario ? window.isFuncionario() : false;
+  const isRestrictivo = exp.modalidad === "restrictiva";
+  const circuito = exp.tipo === "comp" ? window.CIRCUITO_COMPRA : circuitoSimple(exp);
+  const pasoActual = exp.pasoActual || 0;
+  const myArea = window.SESION?.area || "tec";
+  
+  // Check if current user's area is responsible for current step
+  const currentStep = circuito[pasoActual] || null;
+  const canAct = currentStep && currentStep.area === myArea;
+  
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 320px", gap: 16 }}>
+      <div className="card">
+        <div className="card-head">
+          <h3>Seguimiento del expediente</h3>
+          <ModalidadChip mod={exp.modalidad} />
+        </div>
+        <div className="card-body">
+          {isRestrictivo && (
+            <div style={{ background: "#fee2e2", border: "1px solid #fecaca", borderRadius: 6, padding: "10px 14px", marginBottom: 14, fontSize: 12.5, display: "flex", gap: 10, alignItems: "flex-start" }}>
+              <span style={{ color: "#991b1b" }}><IconShield size={14}/></span>
+              <div>
+                <b style={{ color: "#991b1b" }}>Modalidad Restrictiva.</b>{" "}
+                <span style={{ color: "var(--text-2)" }}>El circuito es cerrado. Solo podés intervenir si el paso actual le corresponde a tu área.</span>
+              </div>
+            </div>
+          )}
+          
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ fontSize: 11.5, color: "var(--text-3)", textTransform: "uppercase", letterSpacing: ".05em", marginBottom: 6 }}>Progreso del circuito</div>
+            <div style={{ height: 8, background: "#EEF1F4", borderRadius: 4, overflow: "hidden" }}>
+              <div style={{ height: "100%", width: Math.min(100, ((pasoActual + 1) / circuito.length) * 100) + "%", background: "var(--celeste)", borderRadius: 4 }} />
+            </div>
+            <div style={{ fontSize: 12, color: "var(--text-2)", marginTop: 4 }}>Paso {pasoActual + 1} de {circuito.length}</div>
+          </div>
+          
+          <div>
+            {circuito.map((p, i) => {
+              const done = i < pasoActual;
+              const curr = i === pasoActual;
+              const isMyArea = p.area === myArea;
+              return (
+                <div key={i} style={{ display: "flex", gap: 14, padding: "10px 0", borderBottom: i < circuito.length - 1 ? "1px solid var(--border)" : "none", alignItems: "center", opacity: isRestrictivo && !isMyArea && !done ? 0.5 : 1 }}>
+                  <div style={{
+                    width: 28, height: 28, borderRadius: 14, flexShrink: 0,
+                    background: done ? "var(--verde)" : curr && isMyArea ? "var(--celeste)" : "#fff",
+                    color: done || (curr && isMyArea) ? "#fff" : "var(--text-3)",
+                    border: "1.5px solid " + (done ? "var(--verde)" : curr ? "var(--celeste)" : "var(--border-strong)"),
+                    display: "grid", placeItems: "center", fontWeight: 600, fontSize: 11,
+                  }}>
+                    {done ? <IconCheck size={12}/> : i + 1}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      <span style={{ fontWeight: 500, fontSize: 13 }}>{p.accion}</span>
+                      <span style={{ fontSize: 11, color: "var(--text-2)" }}>· {window.getArea(p.area).nombre}</span>
+                      {isMyArea && curr && <span className="chip info" style={{ fontSize: 10 }}>Tu área</span>}
+                    </div>
+                    {curr && <div style={{ fontSize: 11.5, color: "var(--celeste)", marginTop: 2, fontWeight: 500 }}>● En curso</div>}
+                  </div>
+                  <div style={{ fontSize: 11, color: "var(--text-2)" }}>Plazo: {p.plazo}</div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+        <div className="card">
+          <div className="card-head"><h3>Acciones de seguimiento</h3></div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, padding: "12px 14px" }}>
+            {!isRestrictivo && (
+              <>
+                <button className="btn btn-primary" style={{ justifyContent: "flex-start" }} disabled={!canAct}>
+                  <IconCheck size={14}/> Completar paso actual
+                </button>
+                <button className="btn" style={{ justifyContent: "flex-start" }} disabled={!canAct}>
+                  <IconUsers size={14}/> Derivar
+                </button>
+                <button className="btn" style={{ justifyContent: "flex-start" }} disabled={!canAct}>
+                  <IconAlert size={14}/> Observar / devolver
+                </button>
+              </>
+            )}
+            {isRestrictivo && canAct && (
+              <>
+                <button className="btn btn-primary" style={{ justifyContent: "flex-start" }}>
+                  <IconCheck size={14}/> Completar paso
+                </button>
+                <button className="btn" style={{ justifyContent: "flex-start" }}>
+                  <IconAlert size={14}/> Observar
+                </button>
+              </>
+            )}
+            {isRestrictivo && !canAct && (
+              <div style={{ fontSize: 12.5, color: "var(--text-3)", padding: 12, textAlign: "center" }}>
+                El paso actual no corresponde a tu área. No hay acciones disponibles.
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="card">
+          <div className="card-head"><h3>Resumen</h3></div>
+          <div className="card-body" style={{ fontSize: 12.5 }}>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+              <span style={{ color: "var(--text-2)" }}>Días transcurridos</span>
+              <b>{exp.diasTranscurridos}</b>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+              <span style={{ color: "var(--text-2)" }}>Área actual</span>
+              <b>{window.getArea(exp.areaActual).nombre}</b>
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 8 }}>
+              <span style={{ color: "var(--text-2)" }}>Estado</span>
+              <EstadoChip estado={exp.estado} />
+            </div>
+            <div style={{ display: "flex", justifyContent: "space-between" }}>
+              <span style={{ color: "var(--text-2)" }}>Modalidad</span>
+              <ModalidadChip mod={exp.modalidad} />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // ---------- TAB: DOCUMENTOS ----------
