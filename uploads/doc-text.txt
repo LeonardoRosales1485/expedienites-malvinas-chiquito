@@ -1,0 +1,433 @@
+Análisis Funcional - Sistema de Expediente Digital Municipal
+Municipalidad de Malvinas Argentinas - Documento funcional de trabajo
+ANÁLISIS FUNCIONAL
+Sistema de Expediente Digital Municipal
+Municipalidad de Malvinas Argentinas
+
+-- 1 of 10 --
+
+Análisis Funcional - Sistema de Expediente Digital Municipal
+Municipalidad de Malvinas Argentinas - Documento funcional de trabajo
+1. Introducción
+El presente documento define un análisis funcional integral para la implementación de un Sistema de Expediente
+Digital Municipal, tomando como base los circuitos administrativos vigentes y el organigrama funcional municipal.
+Los documentos analizados muestran que los circuitos administrativos se encuentran estructurados por
+repartición interviniente, actuación y plazo estimado en días. El objetivo del sistema no es modificar la lógica
+administrativa vigente, sino digitalizarla, hacerla trazable y permitir su control operativo, legal y funcional.
+El Decreto 2239/21 establece la necesidad de diseñar, revisar, monitorear y auditar los circuitos administrativos,
+así como capacitar a los agentes intervinientes. Por lo tanto, el sistema debe funcionar como soporte tecnológico
+para esos circuitos y como herramienta de control de cumplimiento.
+2. Objetivo del sistema
+Implementar una plataforma que permita gestionar expedientes municipales desde su inicio hasta su cierre y
+archivo, respetando las áreas intervinientes, las actuaciones previstas, las validaciones requeridas, los plazos
+definidos y los actos administrativos que correspondan.
+• Digitalizar la creación, derivación, intervención, aprobación, ejecución y archivo de expedientes.
+• Centralizar documentación, formularios, dictámenes, actos administrativos y constancias.
+• Garantizar trazabilidad completa por expediente, área, usuario, fecha y acción.
+• Controlar plazos y detectar desvíos respecto del circuito aprobado.
+• Permitir aprobaciones jerárquicas por área cuando corresponda.
+• Facilitar la generación, firma, registro y notificación de actos administrativos.
+• Brindar reportes para gestión, auditoría y mejora continua.
+3. Alcance funcional
+• Alta y caratulación de expedientes.
+• Carga de solicitudes externas e internas.
+• Gestión documental con adjuntos, formularios, informes y constancias.
+• Derivación entre áreas municipales según circuito configurado.
+• Intervenciones técnicas, económicas, contables, tributarias y legales.
+• Generación de decretos, resoluciones, disposiciones, convenios, certificados y autorizaciones.
+• Circuito de firmas y refrendos.
+• Notificaciones al interesado y a áreas internas.
+• Seguimiento de estados y plazos.
+• Cierre, archivo y auditoría del expediente.
+4. Criterio funcional general
+El análisis de los circuitos permite identificar que no existe un único flujo idéntico para todos los trámites. Lo que
+existe es una estructura común que se adapta según el tipo de expediente. Por eso, la solución recomendada es
+un motor de workflow configurable.
+Cada tipo de trámite debe tener definido su recorrido: área de inicio, documentación requerida, validaciones,
+áreas intervinientes, plazos, acciones permitidas, condiciones de avance, posibles devoluciones, acto
+administrativo final y área de cierre.
+5. Actores principales del sistema
+Actor / Área Rol funcional dentro del sistema
+Vecino / Comerciante / Empresa /
+Beneficiario
+Inicia trámites externos, presenta documentación, realiza pagos, firma convenios o recibe
+notificaciones.
+Repartición originante Inicia expedientes internos mediante nota, informe, documentación respaldatoria y, si corresponde,
+proyecto de acto administrativo.
+
+-- 2 of 10 --
+
+Análisis Funcional - Sistema de Expediente Digital Municipal
+Municipalidad de Malvinas Argentinas - Documento funcional de trabajo
+Mesa de Entradas Caratula expedientes, asigna número, registra ingreso y remite al área competente.
+Área técnica Analiza el trámite, controla requisitos, emite informes, realiza inspecciones o validaciones
+sustantivas.
+Dirección de Presupuesto Evalúa disponibilidad presupuestaria, asigna categoría programática o verifica factibilidad.
+Contaduría Municipal Controla legalidad del gasto, emite informes económicos, imputa, genera órdenes de pago o controla
+rendiciones.
+Secretaría de Economía y Hacienda Convalida factibilidad, presta conformidad económica, controla actuaciones con impacto financiero.
+Subsecretaría de Ingresos Tributarios Verifica deudas, actualiza cuentas, emite informes tributarios, boletas o talonarios de pago.
+Dirección de Asuntos Legales /
+Dictámenes Analiza legalidad, emite dictámenes, observa o valida proyectos de actos administrativos.
+Dirección General de Gobierno Confecciona decretos, convenios y actos; gestiona firmas, registra y agrega copia al expediente.
+Secretaría / Subsecretaría /
+Intendente Intervienen en aprobaciones, firmas y refrendos según el tipo de acto administrativo.
+Tesorería Ejecuta pagos, transferencias, cheques, registros de pago o ingresos, según corresponda.
+Dirección General de Administración Audita circuitos, controla no conformidades, propone mejoras y participa en diseño/revisión de
+procedimientos.
+6. Modelo general del flujo del expediente
+6.1 Formas de inicio
+Tipo de inicio Descripción Ejemplos
+Inicio externo Lo inicia un ciudadano, comerciante, empresa, familia,
+beneficiario o adjudicatario.
+Habilitación, baja de comercio, solicitud de subsidio,
+cesión de vivienda, permiso.
+Inicio interno Lo inicia una repartición municipal para tramitar una
+actuación administrativa.
+Reconocimiento de servicios, compra, convenio,
+apremio, reclamo interno.
+Inicio derivado Surge como consecuencia de otro expediente o
+actuación previa.
+Apremio por deuda, escritura luego de adjudicación,
+regularización por plano no conforme.
+6.2 Validación inicial
+Antes de caratular, el sistema debe confirmar que el trámite tenga datos mínimos, documentación inicial,
+solicitante identificado, área competente y circuito asociado.
+• Si falta documentación obligatoria, el trámite queda observado y vuelve al interesado o al área originante.
+• Si no corresponde iniciar expediente, se rechaza fundadamente.
+• Si está correcto, se habilita la caratulación formal.
+6.3 Caratulación
+La caratulación formaliza la existencia del expediente. Debe generar número único, año, tipo de trámite, iniciador,
+área originante, área responsable inicial, objeto, fecha de inicio, estado inicial, circuito asociado y plazo estimado.
+6.4 Derivación inicial
+Una vez caratulado, el expediente debe enviarse al área competente según el tipo de trámite. La derivación
+puede ser automática por configuración del circuito o manual con justificación, siempre dejando trazabilidad.
+7. Flujo completo recomendado
+Etapa Área / Actor Acción principal Estado sugerido
+1 Vecino / Repartición Carga solicitud, datos y documentación. Presentado
+2 Mesa de Entradas / Área Valida documentación mínima y competencia. En revisión inicial
+
+-- 3 of 10 --
+
+Análisis Funcional - Sistema de Expediente Digital Municipal
+Municipalidad de Malvinas Argentinas - Documento funcional de trabajo
+receptora
+3 Mesa de Entradas Caratula y asigna número de expediente. Caratulado / Ingresado
+4 Área técnica competente Analiza, inspecciona, genera informe o formulario. En análisis técnico
+5 Áreas complementarias Intervienen según circuito: Catastro, Fiscalización, Ordenamiento,
+Ingresos, Compras, etc. En intervención
+6 Dirección de Presupuesto Verifica factibilidad o categoría programática, si aplica. Pendiente / aprobado
+presupuesto
+7 Contaduría Municipal Emite informe, imputa o controla documentación contable, si aplica. Pendiente / informe
+contable
+8 Secretaría de Economía y
+Hacienda Convalida, presta conformidad o controla viabilidad económica. Conformado por Hacienda
+9 Asuntos Legales /
+Dictámenes Dictamina sobre legalidad del trámite o proyecto. Dictamen legal
+10 Dirección General de
+Gobierno Confecciona acto administrativo. Acto en confección
+11 Autoridades firmantes Firman o refrendan el acto. Pendiente de firma /
+firmado
+12 Dirección General de
+Gobierno Registra número, fecha y agrega copia al expediente. Registrado
+13 Área ejecutora Ejecuta la decisión: entrega, pago, autorización, actualización,
+convenio, demanda, etc. En ejecución
+14 Área responsable /
+Notificaciones Notifica al interesado y registra constancia. Notificado
+15 Interesado Cumple acción requerida: pago, firma, documentación, retiro,
+rendición.
+Pendiente / cumplido por
+interesado
+16 Área final Verifica cumplimiento del objeto. Resuelto
+17 Área final / Archivo Cierra y archiva expediente. Cerrado / Archivado
+8. Flujo textual end-to-end
+Inicio de solicitud
+→ Carga de datos y documentación
+→ Validación inicial
+→ Caratulación del expediente
+→ Derivación al área técnica competente
+→ Análisis técnico / inspección / informe
+→ Intervenciones complementarias según trámite
+→ Validación presupuestaria, si corresponde
+→ Control contable, si corresponde
+→ Conformidad de Hacienda, si corresponde
+→ Dictamen legal, si corresponde
+→ Confección de acto administrativo
+→ Circuito de firmas
+→ Registro del acto
+→ Ejecución de la decisión
+→ Notificación al interesado
+→ Acción del interesado, si corresponde
+→ Resolución del expediente
+→ Cierre
+→ Archivo
+
+-- 4 of 10 --
+
+Análisis Funcional - Sistema de Expediente Digital Municipal
+Municipalidad de Malvinas Argentinas - Documento funcional de trabajo
+9. Áreas correspondientes por tipo de trámite
+9.1 Habilitaciones comerciales
+• Dirección de Habilitaciones de Comercio e Industria.
+• Comerciante.
+• Tesorería.
+• Dirección de Ordenamiento Territorial.
+• Dirección General de Fiscalización.
+• Dirección de Catastro.
+• Subsecretaría de Ingresos Tributarios.
+• Dirección General de Gobierno, cuando requiere decreto.
+• Subsecretaría de Gobierno, Legal y Técnica.
+• Secretaría de Gobierno y Monitoreo Institucional.
+• Mesa de Entradas y Archivo, si corresponde.
+Flujo recomendado: solicitud del comerciante, control de requisitos por Habilitaciones, validación de
+uso/rubro/superficie/deuda, pago de tasas, intervención de Ordenamiento Territorial, Fiscalización, Catastro,
+informe tributario, acto administrativo o certificado, notificación, cierre y archivo.
+9.2 Compras y contrataciones
+• Repartición solicitante.
+• Secretaría del área.
+• Dirección de Compras.
+• Operador M@JOR.
+• Dirección de Patrimonio, si hay bienes inventariables.
+• Dirección de Presupuesto.
+• Secretaría de Economía y Hacienda.
+• Contaduría.
+• Mesa de Entradas, si corresponde expediente.
+• Dirección de Dictámenes.
+• Dirección General de Gobierno.
+• Intendente / Secretarías firmantes.
+• Proveedor.
+Flujo recomendado: nota de pedido, presupuestos y motivación; aval de Secretaría; control de Compras; carga
+en M@JOR; verificación presupuestaria; imputación contable; generación de orden de compra o expediente;
+dictamen legal si corresponde; decreto; orden de compra; recepción; orden de pago; pago y archivo.
+9.3 Trámites con impacto económico: subsidios, reconocimientos y pagos
+• Repartición originante.
+• Secretaría del área.
+• Mesa de Entradas.
+• Dirección de Presupuesto.
+• Contaduría Municipal.
+• Secretaría de Economía y Hacienda.
+• Dirección de Asuntos Legales o Dictámenes.
+• Dirección General de Gobierno.
+• Tesorería.
+• Beneficiario / proveedor.
+Flujo recomendado: la repartición genera solicitud e informe; Mesa caratula; Presupuesto otorga factibilidad;
+Contaduría emite informe; Hacienda presta conformidad; Legales dictamina; Gobierno confecciona acto; se firma
+
+-- 5 of 10 --
+
+Análisis Funcional - Sistema de Expediente Digital Municipal
+Municipalidad de Malvinas Argentinas - Documento funcional de trabajo
+y registra; Contaduría emite orden de pago; Tesorería paga; se comunica al beneficiario; se controla rendición si
+corresponde y se archiva.
+9.4 Vivienda, regularización dominial y hábitat
+• Familia solicitante / adjudicatario.
+• Dirección de Viviendas.
+• Dirección de Regularización Dominial y Hábitat.
+• Secretaría de Obras Públicas y Planificación Urbana.
+• Mesa de Entradas.
+• Subsecretaría de Ingresos Tributarios.
+• Dirección de Asuntos Legales.
+• Dirección General de Gobierno.
+• Privada del Intendente.
+• Intendente.
+• Archivo.
+Flujo recomendado: presentación del solicitante; análisis técnico/social/patrimonial; verificación de deuda o
+capacidad económica; proyecto de convenio o decreto; dictamen legal; impresión y firma de convenio/decreto;
+registro; actualización tributaria; entrega o supervisión; archivo o generación de expediente derivado.
+9.5 Apremios y cobro judicial
+• Subsecretaría de Ingresos Tributarios.
+• Secretaría de Obras Públicas y Planificación Urbana, cuando corresponda.
+• Mesa de Entradas.
+• Dirección de Apremios.
+• Dirección de Informática.
+• Secretaría de Economía y Hacienda.
+• Subsecretaría de Gobierno, Legal y Técnica.
+• Secretaría de Gobierno y Monitoreo Institucional.
+• Privada del Intendente.
+• Dirección de Catastro.
+• Dirección de Faltas o Defensa al Consumidor, si corresponde.
+Flujo recomendado: verificación de deuda; liquidación; notificación al contribuyente; caratulación; Apremios
+verifica datos y prescripción; Informática bloquea cuenta y emite certificado; Ingresos y Hacienda suscriben;
+Gobierno Legal y Técnica supervisa; Privada/Intendente firma; Catastro agrega documentación; Apremios
+confecciona demanda e inicia ejecución.
+9.6 Convenios
+• Repartición originante.
+• Secretaría competente.
+• Mesa de Entradas.
+• Economía y Hacienda, si hay erogación.
+• Asuntos Legales.
+• Dirección General de Gobierno.
+• Intendente / Privada.
+• HCD, si requiere autorización o convalidación.
+• Área ejecutora.
+• Archivo.
+Flujo recomendado: generación de proyecto y justificación; definición de erogación; intervención económica si
+corresponde; dictamen legal; confección de convenio o decreto; firma; registro; ejecución; control de
+cumplimiento; cierre y archivo.
+
+-- 6 of 10 --
+
+Análisis Funcional - Sistema de Expediente Digital Municipal
+Municipalidad de Malvinas Argentinas - Documento funcional de trabajo
+10. Modelo de estados del expediente
+• Borrador
+• Presentado
+• Ingresado
+• Caratulado
+• En análisis
+• En área técnica
+• Pendiente de documentación
+• Pendiente de pago
+• Pendiente de inspección
+• Pendiente de informe
+• Observado
+• Rechazado
+• Aprobado técnicamente
+• Pendiente de presupuesto
+• Pendiente de contaduría
+• Pendiente de Hacienda
+• Pendiente de dictamen legal
+• Pendiente de acto administrativo
+• Pendiente de firma
+• Firmado
+• Registrado
+• Pendiente de ejecución
+• En ejecución
+• Pendiente de notificación
+• Notificado
+• Pendiente de acción del interesado
+• Resuelto
+• Cerrado
+• Archivado
+• Caducado
+• Desistido
+11. Reglas de negocio principales
+11.1 Reglas de inicio
+• Todo trámite debe tener tipo de expediente.
+• Todo expediente debe tener un área responsable inicial.
+• Todo expediente debe estar asociado a un circuito aprobado o configurable.
+• No se debe caratular si faltan datos mínimos.
+• Toda presentación debe generar constancia.
+11.2 Reglas de documentación
+• Cada trámite debe tener una matriz de documentación obligatoria, opcional y condicional.
+• Si falta documentación obligatoria, el trámite queda observado.
+• Cada documento debe registrar fecha, usuario, área, versión y tipo documental.
+• Los informes, certificados, dictámenes y constancias deben quedar incorporados al expediente.
+11.3 Reglas de derivación
+• El expediente debe circular según el flujo configurado.
+
+-- 7 of 10 --
+
+Análisis Funcional - Sistema de Expediente Digital Municipal
+Municipalidad de Malvinas Argentinas - Documento funcional de trabajo
+• Toda derivación debe registrar fecha de salida, fecha de entrada, área origen y área destino.
+• Las áreas pueden devolver por observación al área anterior o al iniciador, según circuito.
+• Toda intervención no prevista debe quedar registrada como intervención excepcional.
+11.4 Reglas de plazos
+• Cada etapa debe tener plazo estimado.
+• El sistema debe calcular vencimientos y alertas.
+• Los expedientes vencidos deben quedar marcados para seguimiento.
+• La auditoría debe poder detectar desvíos por plazo y por giro incorrecto.
+11.5 Reglas de aprobación
+• Cada área debe poder aprobar, observar o rechazar.
+• La aprobación debe registrar usuario, cargo, área, fecha y comentario.
+• Cuando exista aprobación jerárquica, el expediente debe pasar de agente a responsable o director.
+• Sin aprobación del nivel requerido, el expediente no debe avanzar.
+11.6 Reglas de acto administrativo
+• El acto se genera solo cuando las etapas previas están completas.
+• Debe existir plantilla según tipo de acto.
+• Debe existir circuito de firma.
+• No se puede registrar acto sin firma requerida.
+• El acto firmado debe incorporarse al expediente.
+11.7 Reglas de cierre
+• Solo se puede cerrar expediente si tiene resultado final.
+• El cierre debe registrar motivo y usuario.
+• No debe permitirse modificar expediente cerrado, salvo reapertura autorizada.
+• El archivo debe conservar historial completo.
+12. Funcionalidades requeridas
+Módulo Funcionalidades principales
+Bandeja de expedientes Listado por área, filtros, pendientes de intervención, vencidos, observados, por estado y por tipo de
+trámite.
+Alta de expediente Selección de trámite, carga de solicitante, documentación, área inicial, circuito y carátula.
+Gestión documental Adjuntos, clasificación, versionado, formularios, informes, dictámenes y generación desde plantillas.
+Motor de workflow Configuración de pasos, áreas, estados, plazos, retornos, condiciones y acciones permitidas.
+Observaciones Observación documental, devolución, subsanación y reingreso de documentación.
+Actos administrativos Creación de decreto, resolución, disposición, convenio, certificado o autorización.
+Firmas Circuito de firma secuencial, rechazo con observación, registro de firmante y fecha.
+Notificaciones Avisos internos y externos, constancia, acuse y seguimiento de respuesta.
+Auditoría Historial completo, plazos, desvíos, no conformidades y reportes.
+Reportes Indicadores por área, estado, tipo de trámite, tiempo promedio, vencimientos y productividad.
+
+-- 8 of 10 --
+
+Análisis Funcional - Sistema de Expediente Digital Municipal
+Municipalidad de Malvinas Argentinas - Documento funcional de trabajo
+13. Cómo iniciaría el expediente
+13.1 Portal externo
+Para vecinos, comerciantes, empresas, beneficiarios o adjudicatarios. El usuario ingresa, selecciona trámite,
+completa datos, adjunta documentación y envía. El sistema genera una presentación y la remite a revisión inicial.
+13.2 Módulo interno de repartición
+Para expedientes iniciados por áreas municipales. El agente selecciona tipo de expediente, carga nota, informe,
+documentación y proyecto de acto si corresponde. Luego remite a Mesa de Entradas para caratulación.
+13.3 Inicio desde otro expediente
+Cuando un expediente cerrado o en trámite genera una nueva actuación. Por ejemplo, recupero de inmueble que
+genera adjudicación, plano no conforme que genera regularización, deuda no cancelada que genera apremio o
+subsidio otorgado que genera legajo de rendición.
+14. Cómo finalizaría el expediente
+Tipo de finalización Descripción Estado final
+Final aprobado
+Se cumplió el objeto del trámite: decreto emitido, certificado entregado,
+convenio firmado, pago realizado, autorización otorgada, cuenta actualizada,
+vivienda entregada, orden de compra emitida o demanda iniciada.
+Cerrado / Archivado
+Final rechazado El trámite no cumple requisitos técnicos, legales, tributarios o documentales. Rechazado / Archivado
+Final por caducidad El interesado no completa documentación, no paga, no responde o no se
+presenta dentro del plazo. Caducado / Archivado
+Final por desistimiento El interesado solicita no continuar con el trámite. Desistido / Archivado
+Final con expediente derivado El expediente genera una nueva actuación vinculada. Cerrado con expediente
+derivado
+15. Recomendación funcional final
+La mejor solución no es construir un sistema rígido por cada trámite, sino un Sistema de Expediente Digital con
+motor configurable de circuitos. Esto permitiría digitalizar circuitos distintos sin desarrollar desde cero cada
+proceso.
+Cada circuito debería configurarse con la siguiente estructura:
+• Tipo de trámite.
+• Objeto.
+• Normativa.
+• Área inicial.
+• Documentación requerida.
+• Pasos del circuito.
+• Área responsable por paso.
+• Acción esperada.
+• Plazo máximo.
+• Estado resultante.
+• Condición de avance.
+• Condición de rechazo.
+• Condición de observación.
+• Acto administrativo final.
+• Área de ejecución.
+• Área de archivo.
+
+-- 9 of 10 --
+
+Análisis Funcional - Sistema de Expediente Digital Municipal
+Municipalidad de Malvinas Argentinas - Documento funcional de trabajo
+16. Conclusión
+Los circuitos municipales analizados ya cuentan con una lógica administrativa sólida: cada expediente se mueve
+por reparticiones específicas, con actuaciones definidas, plazos estimados y actos administrativos finales. El
+sistema debe respetar esa lógica y convertirla en una herramienta digital que permita seguimiento, trazabilidad,
+control de plazos y auditoría.
+El flujo ideal inicia con una solicitud externa o interna, se caratula formalmente, atraviesa las áreas técnicas,
+económicas y legales que correspondan, genera el acto administrativo necesario, ejecuta la decisión, notifica al
+interesado y finaliza con cierre y archivo del expediente.
+17. Fuentes analizadas
+• VOL10A - Organigrama Gráfico Municipal 2026.
+• VOL10B - Organigrama de Funciones Municipal 2026.
+• Vol. 28A - Circuitos Administrativos.
+• Vol. 28B - Circuitos Administrativos.
+• Vol. 28C - Circuitos Administrativos.
+• Vol. 28D - Circuitos Administrativos.
+• Vol. 28E - Circuitos Administrativos.
+
+-- 10 of 10 --
+
